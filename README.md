@@ -36,7 +36,7 @@ Note: if you wish to add new datasets using the Fuseki admin UI - and persist th
 
 **Note on running in OpenShift**, if you use this image as a parent image (e.g. use your own Dockerfile to load the data inside the image using TDBLOADER): as containers are run as an arbitrary user, you'll have to ensure the write permission on the TDB and index directories, e.g. by adding the following lines in your Dockerfile after the tdbloader and indexing commands:
 
-```
+```shell
 # Set permissions to allow fuseki to run as an arbitrary user
 RUN chgrp -R 0 $FUSEKI_BASE \
     && chmod -R g+rwX $FUSEKI_BASE
@@ -44,19 +44,23 @@ RUN chgrp -R 0 $FUSEKI_BASE \
 
 ## Build
 
-`docker build --squash -t secoresearch/fuseki .`
+```shell
+docker build --squash -t secoresearch/fuseki .
+```
 
 ## Run
 
-`docker run --rm -it -p 3030:3030 --name fuseki -e ADMIN_PASSWORD=[PASSWORD] -e ENABLE_DATA_WRITE=[true|false] -e ENABLE_UPDATE=[true|false] -e ENABLE_UPLOAD=[true|false] -e QUERY_TIMEOUT=[number in milliseconds] --mount type=bind,source="$(pwd)"/fuseki-data,target=/fuseki-base/databases secoresearch/fuseki`
+```shell
+docker container run --rm -it -p 3030:3030 --name fuseki -e ADMIN_PASSWORD=[PASSWORD] -e ENABLE_DATA_WRITE=[true|false] -e ENABLE_UPDATE=[true|false] -e ENABLE_UPLOAD=[true|false] -e QUERY_TIMEOUT=[number in milliseconds] --mount type=bind,source="$(pwd)"/fuseki-data,target=/fuseki-base/databases secoresearch/fuseki
+```
 
 Or to support adding new datasets using the Fuseki admin UI:
 
-```
+```shell
 mkdir fuseki-data
 mkdir fuseki-configuration
 cp -p assembler.ttl fuseki-configuration/
-docker run --rm -it -p 3030:3030 --name fuseki -e ADMIN_PASSWORD=[PASSWORD] -e ENABLE_DATA_WRITE=[true|false] -e ENABLE_UPDATE=[true|false] -e ENABLE_UPLOAD=[true|false] -e QUERY_TIMEOUT=[number in milliseconds] --mount type=bind,source="$(pwd)"/fuseki-data,target=/fuseki-base/databases --mount type=bind,source="$(pwd)"/fuseki-configuration,target=/fuseki-base/configuration secoresearch/fuseki
+docker container run --rm -it -p 3030:3030 --name fuseki -e ADMIN_PASSWORD=[PASSWORD] -e ENABLE_DATA_WRITE=[true|false] -e ENABLE_UPDATE=[true|false] -e ENABLE_UPLOAD=[true|false] -e QUERY_TIMEOUT=[number in milliseconds] --mount type=bind,source="$(pwd)"/fuseki-data,target=/fuseki-base/databases --mount type=bind,source="$(pwd)"/fuseki-configuration,target=/fuseki-base/configuration secoresearch/fuseki
 ```
 
 The same run command can be used to pull and run the container from Docker Hub (no need to build the image first).

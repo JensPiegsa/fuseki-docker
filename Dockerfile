@@ -1,30 +1,18 @@
-#   Licensed to the Apache Software Foundation (ASF) under one or more
-#   contributor license agreements.  See the NOTICE file distributed with
-#   this work for additional information regarding copyright ownership.
-#   The ASF licenses this file to You under the Apache License, Version 2.0
-#   (the "License"); you may not use this file except in compliance with
-#   the License.  You may obtain a copy of the License at
-#
-#       http://www.apache.org/licenses/LICENSE-2.0
-#
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
+ARG JAVA_VERSION=20
 
-FROM openjdk:19-slim AS base
+FROM eclipse-temurin:${JAVA_VERSION}-alpine AS base
 
-LABEL maintainer="jouni.tuominen@aalto.fi"
+LABEL maintainer="piegsa@gmail.com"
 
-RUN apt-get update \
- && apt-get install -qq pwgen ruby wget
+RUN apk update && \
+    apk add --no-cache bash pwgen wget
 
 # Update below according to htps://jena.apache.org/download/
-ENV FUSEKI_SHA512 1d60d596a4aa6f3c786e0da86190e406152ed2f5e0698960c6065a0b85bef5bde9844771ddb7cb22aefd95e38c1510ae4ac4d089a484211edc167080ec3af452
-ENV FUSEKI_VERSION 4.5.0
-ENV JENA_SHA512 84e23ca41e8e38b286abf769d3ccdfe069f6157d58e0bb24e78d98ed5f8d598e06ededc16dd5bde0a494d5ee7c49ab9c4f5335cf63727a302e6b8b929d47457f
-ENV JENA_VERSION 4.5.0
+#ENV FUSEKI_WAR_SHA512 a5b724ae1cc088888d6055d46957a96b1717a1ac9d42438cfec72c8f6cc9f8eefd1a13fe159423d48075e166fa0ec745309ffddb72735cc36ee27715bcb4f0dc
+ENV FUSEKI_SHA512 84079078b761e31658c96797e788137205fc93091ab5ae511ba80bdbec3611f4386280e6a0dc378b80830f4e5ec3188643e2ce5e1dd35edfd46fa347da4dbe17
+ENV FUSEKI_VERSION 4.9.0
+ENV JENA_SHA512 04f87c42a3b5fe65ad554beb8a1ef90ca7e0305d306fb18a15bb808891c259f420ab4f630e6b4abbb017e32284f97e23f7b848a21dc57f32ad53f604cb82e28b
+ENV JENA_VERSION 4.9.0
 
 ENV MIRROR https://dlcdn.apache.org
 ENV ARCHIVE http://archive.apache.org/dist
@@ -50,6 +38,13 @@ RUN wget -O fuseki.tar.gz $MIRROR/jena/binaries/apache-jena-fuseki-$FUSEKI_VERSI
     rm fuseki.tar.gz* && \
     cd $FUSEKI_HOME && rm -rf fuseki.war
 
+## sha512 checksum
+#RUN echo "$FUSEKI_WAR_SHA512  fuseki.war" > fuseki.war.sha512
+## Download/check/unpack/move Fuseki in one go (to reduce image size)
+#RUN wget -O fuseki.war $MIRROR/jena/binaries/jena-fuseki-war-$FUSEKI_VERSION.war || \
+#    wget -O fuseki.war $ARCHIVE/jena/binaries/jena-fuseki-war-$FUSEKI_VERSION.war || \
+#    sha512sum -c fuseki.war.sha512 &&  \
+    
 # Get tdbloader2 from Jena
 # sha512 checksum
 RUN echo "$JENA_SHA512  jena.tar.gz" > jena.tar.gz.sha512
@@ -70,6 +65,8 @@ RUN wget -O jena.tar.gz $MIRROR/jena/binaries/apache-jena-$JENA_VERSION.tar.gz |
 COPY shiro.ini /jena-fuseki/shiro.ini
 COPY docker-entrypoint.sh /
 RUN chmod 755 /docker-entrypoint.sh
+
+#COPY jetty.xml /jena-fuseki/jetty.xml
 
 # SeCo extensions
 COPY silk-arq-1.0.0-SNAPSHOT-with-dependencies.jar /javalibs/
@@ -99,4 +96,3 @@ EXPOSE 3030
 USER 9008
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["java", "-cp", "*:/javalibs/*", "org.apache.jena.fuseki.cmd.FusekiCmd"]

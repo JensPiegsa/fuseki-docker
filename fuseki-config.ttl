@@ -12,6 +12,8 @@
 @prefix schema:  <http://schema.org/> .
 @prefix :        <#> .
 
+# see: https://github.com/apache/jena/tree/main/jena-fuseki2/examples
+
 [] rdf:type fuseki:Server ;
    # Server-wide context parameters can be given here.
    # For example, to set query timeouts: on a server-wide basis:
